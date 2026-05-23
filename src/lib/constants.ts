@@ -74,31 +74,37 @@ export const FEATURES = [
     icon: 'brain',
     title: 'AI Itinerary Generation',
     description: 'Personalized day-by-day plans crafted by AI, optimized for route efficiency and hidden gem discovery.',
+    image: '/images/feature-ai.png',
   },
   {
     icon: 'camera',
     title: 'Photography Mode',
     description: 'Golden hour timing, fog probability, drone zones, and the best viewpoints for every location.',
+    image: '/images/feature-photo.png',
   },
   {
     icon: 'map-pin',
     title: 'Hidden Gems Discovery',
     description: 'Uncover secret waterfalls, scenic roads, underrated cafés, and raw local experiences off the tourist trail.',
+    image: '/images/feature-gems.png',
   },
   {
     icon: 'cloud-sun',
     title: 'Weather-Aware Planning',
     description: 'Real-time weather integration that adjusts your itinerary for the perfect travel experience.',
+    image: '/images/feature-weather.png',
   },
   {
     icon: 'wallet',
     title: 'Smart Budget Estimation',
     description: 'Detailed cost breakdowns for accommodation, food, transport, and activities across all budget levels.',
+    image: '/images/feature-budget.png',
   },
   {
     icon: 'route',
     title: 'Route Optimization',
     description: 'AI-powered routing that eliminates backtracking and groups nearby destinations intelligently.',
+    image: '/images/feature-route.png',
   },
 ];
 

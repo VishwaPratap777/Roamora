@@ -128,7 +128,7 @@ export const HOW_IT_WORKS_STEPS = [
 export const TESTIMONIALS = [
   {
     id: '1',
-    name: 'Arjun Mehta',
+    name: 'Utsav Tripathi',
     avatar: '',
     tripType: 'Solo Backpacker',
     destination: 'Spiti Valley',
@@ -137,7 +137,7 @@ export const TESTIMONIALS = [
   },
   {
     id: '2',
-    name: 'Sarah Chen',
+    name: 'Shashank prakash',
     avatar: '',
     tripType: 'Photography Trip',
     destination: 'Faroe Islands',
@@ -146,17 +146,44 @@ export const TESTIMONIALS = [
   },
   {
     id: '3',
-    name: 'Rohan Patel',
+    name: 'Ashwani Yadav',
     avatar: '',
     tripType: 'Friends Group',
     destination: 'Himachal Pradesh',
     quote: 'We used Roamora for our 7-day road trip and it was perfect. The hidden cafés and camping spots it suggested were absolutely magical.',
     rating: 5,
   },
+  {
+    id: '4',
+    name: 'Animesh',
+    avatar: '',
+    tripType: 'Couple Retreat',
+    destination: 'Hidden Bali',
+    quote: 'We stumbled upon a secret waterfall that wasn\'t on any map — Roamora knew. Best anniversary trip we\'ve ever taken, hands down.',
+    rating: 5,
+  },
+  {
+    id: '5',
+    name: 'Sanket Tyagi',
+    avatar: '',
+    tripType: 'Adventure Trek',
+    destination: 'Patagonia',
+    quote: 'The route optimization saved us two full days of backtracking. Every campsite recommendation was breathtaking. This app thinks like an explorer.',
+    rating: 5,
+  },
+  {
+    id: '6',
+    name: 'Shashasnk Singh',
+    avatar: '',
+    tripType: 'Solo Wanderer',
+    destination: 'Faroe Islands',
+    quote: 'I was anxious about solo travel until Roamora built me the perfect plan. It felt like having a wise local friend guiding every step of my journey.',
+    rating: 5,
+  },
 ];
 
 export const SOCIAL_LINKS = [
-  { name: 'Instagram', url: 'https://instagram.com', icon: 'instagram' },
-  { name: 'YouTube', url: 'https://youtube.com', icon: 'youtube' },
+  { name: 'Instagram', url: 'https://instagram.com/vishwapratap777', icon: 'instagram' },
+  { name: 'YouTube', url: 'https://youtube.com/cinewitbix', icon: 'youtube' },
   { name: 'Twitter', url: 'https://twitter.com', icon: 'mountain-snow' },
 ];

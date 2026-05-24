@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ChevronDown, ChevronUp, MountainSnow, ArrowRight } from 'lucide-react';
 import SearchBar from './SearchBar';
@@ -18,6 +19,7 @@ const YoutubeIcon = ({ size = 16 }: { size?: number }) => (
 );
 
 export default function Hero() {
+  const navigate = useNavigate();
   const heroRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -158,7 +160,9 @@ export default function Hero() {
             transition={{ duration: 0.8, delay: 1.5, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="hidden md:flex ml-auto"
           >
-            <div className="glass rounded-2xl p-3 flex items-center gap-3 max-w-[320px] hover:bg-white/[0.08] transition-all duration-300 group cursor-pointer">
+            <div
+              onClick={() => navigate(`/planner?destination=${encodeURIComponent(featuredDest.name)}`)}
+              className="glass rounded-2xl p-3 flex items-center gap-3 max-w-[320px] hover:bg-white/[0.08] transition-all duration-300 group cursor-pointer">
               {/* Thumbnail */}
               <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
                 <img

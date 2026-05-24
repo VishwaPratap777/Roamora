@@ -27,7 +27,7 @@ export function initLenis() {
 
 export function useLenis() {
   useEffect(() => {
-    const lenis = initLenis();
+    initLenis();
 
     return () => {
       // Don't destroy on component unmount — it's global

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Camera, MapPin, CloudSun, Wallet, Route } from 'lucide-react';
 import { FEATURES } from '../../lib/constants';

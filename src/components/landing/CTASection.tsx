@@ -1,8 +1,11 @@
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import AnimatedText from '../ui/AnimatedText';
 
 export default function CTASection() {
+  const navigate = useNavigate();
+
   return (
     <section className="relative py-32 overflow-hidden" id="cta">
       {/* Background */}
@@ -49,11 +52,17 @@ export default function CTASection() {
           transition={{ duration: 0.6, delay: 0.4 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4"
         >
-          <button className="group px-8 py-4 rounded-full bg-gradient-to-r from-accent-gold to-primary-300 text-dark-950 font-accent font-semibold text-sm hover:shadow-glow-gold-lg hover:scale-[1.03] transition-all duration-300 flex items-center gap-2">
+          <button
+            onClick={() => navigate('/planner')}
+            className="group px-8 py-4 rounded-full bg-gradient-to-r from-accent-gold to-primary-300 text-dark-950 font-accent font-semibold text-sm hover:shadow-glow-gold-lg hover:scale-[1.03] transition-all duration-300 flex items-center gap-2 cursor-pointer"
+          >
             Plan Your Trip
             <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
           </button>
-          <button className="px-8 py-4 rounded-full glass text-white font-accent font-medium text-sm hover:bg-white/10 transition-all duration-300">
+          <button
+            onClick={() => document.getElementById('destinations')?.scrollIntoView({ behavior: 'smooth' })}
+            className="px-8 py-4 rounded-full glass text-white font-accent font-medium text-sm hover:bg-white/10 transition-all duration-300 cursor-pointer"
+          >
             Explore Destinations
           </button>
         </motion.div>

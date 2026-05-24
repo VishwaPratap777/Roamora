@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Search } from 'lucide-react';
 
@@ -14,6 +15,7 @@ const SUGGESTIONS = [
 ];
 
 export default function SearchBar() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -38,6 +40,15 @@ export default function SearchBar() {
   const handleSelectSuggestion = (suggestion: string) => {
     setQuery(suggestion);
     setShowSuggestions(false);
+    navigate(`/planner?destination=${encodeURIComponent(suggestion)}`);
+  };
+
+  const handleSearch = () => {
+    if (query.trim()) {
+      navigate(`/planner?destination=${encodeURIComponent(query.trim())}`);
+    } else {
+      navigate('/planner');
+    }
   };
 
   return (
@@ -83,6 +94,7 @@ export default function SearchBar() {
 
         {/* Search Button */}
         <button
+          onClick={handleSearch}
           className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-r from-accent-gold to-accent-amber flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 shadow-md shadow-accent-gold/20 hover:shadow-glow-gold/40"
           aria-label="Search"
         >

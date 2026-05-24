@@ -1,6 +1,5 @@
-import { motion } from 'framer-motion';
 import { MountainSnow, ArrowRight, Heart, Globe } from 'lucide-react';
-import { NAV_LINKS } from '../../lib/constants';
+
 import logo from '../../assets/logo.png';
 
 /* Inline SVG social icons (not available in lucide-react) */

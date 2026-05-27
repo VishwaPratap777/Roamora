@@ -1,19 +1,20 @@
 /* =====================================================
-   Itinerary Map — Interactive Mapbox GL Component
+   Itinerary Map — MapLibre GL (free, no token needed)
+   Uses CartoDB Dark Matter tiles via MapLibre WebGL
    ===================================================== */
 
 import { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { motion } from 'framer-motion';
-import { Map as MapIcon, Layers, Maximize2, Minimize2 } from 'lucide-react';
+import { Layers, Maximize2, Minimize2 } from 'lucide-react';
 import type { ItineraryDay, ItineraryActivity } from '../../types';
 import {
-  getMapboxToken,
   CATEGORY_COLORS,
   CATEGORY_ICONS,
   MAP_DEFAULTS,
   MAP_STYLES,
+  type MapStyleKey,
 } from '../../lib/mapConfig';
 
 interface ItineraryMapProps {
@@ -24,32 +25,38 @@ interface ItineraryMapProps {
 
 export default function ItineraryMap({ day, allDays: _allDays, className = '' }: ItineraryMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [mapStyle, setMapStyle] = useState<string>(MAP_DEFAULTS.style);
+  const [styleKey, setStyleKey] = useState<MapStyleKey>(MAP_DEFAULTS.styleKey);
   const [mapReady, setMapReady] = useState(false);
 
-  const token = getMapboxToken();
+  // Style order for cycling
+  const STYLE_CYCLE: MapStyleKey[] = ['dark', 'satellite', 'outdoors'];
+  const nextStyle = STYLE_CYCLE[(STYLE_CYCLE.indexOf(styleKey) + 1) % STYLE_CYCLE.length];
 
   // Initialize map
   useEffect(() => {
-    if (!token || !mapContainerRef.current) return;
+    if (!mapContainerRef.current) return;
 
-    mapboxgl.accessToken = token;
-
-    const map = new mapboxgl.Map({
+    const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: mapStyle,
-      center: [78.9629, 20.5937], // Default: India center
+      style: MAP_STYLES[styleKey].url,
+      center: MAP_DEFAULTS.defaultCenter,
       zoom: MAP_DEFAULTS.zoom,
       pitch: MAP_DEFAULTS.pitch,
       bearing: MAP_DEFAULTS.bearing,
       attributionControl: false,
     });
 
-    map.addControl(new mapboxgl.NavigationControl({ showCompass: true }), 'top-right');
-    map.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
+    map.addControl(
+      new maplibregl.NavigationControl({ showCompass: true }),
+      'top-right'
+    );
+    map.addControl(
+      new maplibregl.AttributionControl({ compact: true }),
+      'bottom-right'
+    );
 
     map.on('load', () => {
       setMapReady(true);
@@ -62,9 +69,9 @@ export default function ItineraryMap({ day, allDays: _allDays, className = '' }:
       mapRef.current = null;
       setMapReady(false);
     };
-    // Only reinitialize when token or style changes
+    // Only reinitialize when style changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, mapStyle]);
+  }, [styleKey]);
 
   // Update markers and route when day changes
   useEffect(() => {
@@ -75,13 +82,13 @@ export default function ItineraryMap({ day, allDays: _allDays, className = '' }:
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
-    // Remove existing route layer
+    // Remove existing route layer/source
     if (map.getSource('route')) {
-      map.removeLayer('route-line');
+      if (map.getLayer('route-line')) map.removeLayer('route-line');
       map.removeSource('route');
     }
 
-    // Get activities with coordinates
+    // Get activities with valid coordinates
     const activities = day.activities.filter(
       (a) => a.coordinates && a.coordinates.lat && a.coordinates.lng
     );
@@ -94,15 +101,27 @@ export default function ItineraryMap({ day, allDays: _allDays, className = '' }:
 
       const el = createMarkerElement(activity, index + 1);
 
-      const popup = new mapboxgl.Popup({
+      const popupEl = document.createElement('div');
+      popupEl.innerHTML = createPopupHTML(activity);
+      popupEl.style.cssText = `
+        background: #0f172a;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 12px;
+        min-width: 220px;
+        max-width: 280px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      `;
+
+      const popup = new maplibregl.Popup({
         offset: 20,
         closeButton: true,
         closeOnClick: false,
+        maxWidth: '290px',
         className: 'roamora-popup',
-        maxWidth: '280px',
-      }).setHTML(createPopupHTML(activity));
+      }).setDOMContent(popupEl);
 
-      const marker = new mapboxgl.Marker({ element: el })
+      const marker = new maplibregl.Marker({ element: el })
         .setLngLat([activity.coordinates.lng, activity.coordinates.lat])
         .setPopup(popup)
         .addTo(map);
@@ -110,7 +129,7 @@ export default function ItineraryMap({ day, allDays: _allDays, className = '' }:
       markersRef.current.push(marker);
     });
 
-    // Add route line connecting activities
+    // Add dashed route line connecting activities
     if (activities.length > 1) {
       const routeCoords = activities
         .filter((a) => a.coordinates)
@@ -145,8 +164,8 @@ export default function ItineraryMap({ day, allDays: _allDays, className = '' }:
       });
     }
 
-    // Fit map bounds to markers
-    const bounds = new mapboxgl.LngLatBounds();
+    // Fit map bounds to all markers
+    const bounds = new maplibregl.LngLatBounds();
     activities.forEach((a) => {
       if (a.coordinates) {
         bounds.extend([a.coordinates.lng, a.coordinates.lat]);
@@ -160,19 +179,6 @@ export default function ItineraryMap({ day, allDays: _allDays, className = '' }:
     });
   }, [day, mapReady]);
 
-  // No token — show placeholder
-  if (!token) {
-    return (
-      <div className={`rounded-2xl bg-white/[0.04] border border-white/[0.08] flex flex-col items-center justify-center p-8 ${className}`}>
-        <MapIcon className="w-10 h-10 text-white/15 mb-3" />
-        <p className="text-white/30 text-sm text-center">
-          Set <code className="text-primary-400/60">VITE_MAPBOX_ACCESS_TOKEN</code> in your
-          .env to enable interactive maps
-        </p>
-      </div>
-    );
-  }
-
   return (
     <motion.div
       layout
@@ -183,23 +189,18 @@ export default function ItineraryMap({ day, allDays: _allDays, className = '' }:
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[350px]" />
 
-      {/* Map Controls Overlay */}
+      {/* Map Controls Overlay — top left */}
       <div className="absolute top-3 left-3 flex gap-2">
-        {/* Style Switcher */}
         <button
-          onClick={() =>
-            setMapStyle((prev) =>
-              prev === MAP_STYLES.dark ? MAP_STYLES.satellite : MAP_STYLES.dark
-            )
-          }
+          onClick={() => setStyleKey(nextStyle)}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-dark-950/80 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white text-xs transition-all cursor-pointer"
         >
           <Layers className="w-3.5 h-3.5" />
-          <span>{mapStyle === MAP_STYLES.dark ? 'Satellite' : 'Dark'}</span>
+          <span>{MAP_STYLES[nextStyle].label}</span>
         </button>
       </div>
 
-      {/* Expand/Collapse */}
+      {/* Expand / Collapse */}
       <button
         onClick={() => setIsExpanded((prev) => !prev)}
         className="absolute bottom-3 right-3 p-2 rounded-lg bg-dark-950/80 backdrop-blur-sm border border-white/10 text-white/60 hover:text-white transition-all cursor-pointer"
@@ -211,7 +212,7 @@ export default function ItineraryMap({ day, allDays: _allDays, className = '' }:
         )}
       </button>
 
-      {/* Day Label */}
+      {/* Day label + location count */}
       <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-lg bg-dark-950/80 backdrop-blur-sm border border-white/10">
         <span className="text-xs font-medium text-primary-400">
           Day {day.dayNumber}
@@ -232,9 +233,8 @@ export default function ItineraryMap({ day, allDays: _allDays, className = '' }:
   );
 }
 
-/**
- * Create a custom marker DOM element
- */
+/* ─────────────────────────────────────── helpers ─── */
+
 function createMarkerElement(activity: ItineraryActivity, _index: number): HTMLDivElement {
   const el = document.createElement('div');
   const color = CATEGORY_COLORS[activity.category] || '#c8a44e';
@@ -245,60 +245,60 @@ function createMarkerElement(activity: ItineraryActivity, _index: number): HTMLD
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: ${color};
-    border: 2.5px solid ${isGem ? '#f5d98a' : 'rgba(255,255,255,0.3)'};
+    background: ${color}22;
+    border: 2.5px solid ${isGem ? '#f5d98a' : color};
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1;
-    box-shadow: 0 2px 8px ${color}66, ${isGem ? '0 0 12px #f5d98a55' : 'none'};
-    transition: transform 0.2s ease;
+    box-shadow: 0 2px 8px ${color}66${isGem ? ', 0 0 12px #f5d98a55' : ''};
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    backdrop-filter: blur(4px);
   `;
 
-  el.innerHTML = `<span style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3))">${
+  el.innerHTML = `<span style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5))">${
     CATEGORY_ICONS[activity.category] || '📍'
   }</span>`;
 
-  // Hover scale
   el.addEventListener('mouseenter', () => {
-    el.style.transform = 'scale(1.2)';
+    el.style.transform = 'scale(1.25)';
+    el.style.boxShadow = `0 4px 16px ${color}99${isGem ? ', 0 0 18px #f5d98a88' : ''}`;
   });
   el.addEventListener('mouseleave', () => {
     el.style.transform = 'scale(1)';
+    el.style.boxShadow = `0 2px 8px ${color}66${isGem ? ', 0 0 12px #f5d98a55' : ''}`;
   });
 
   return el;
 }
 
-/**
- * Create popup HTML content
- */
 function createPopupHTML(activity: ItineraryActivity): string {
   const color = CATEGORY_COLORS[activity.category] || '#c8a44e';
   return `
-    <div style="font-family: 'Inter', sans-serif; color: #e2e8f0; padding: 4px 0;">
-      <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #fff;">
+    <div style="font-family: 'Inter', sans-serif; color: #e2e8f0;">
+      <div style="font-size: 13px; font-weight: 600; margin-bottom: 4px; color: #fff; line-height: 1.3;">
         ${activity.title}
       </div>
       <div style="font-size: 11px; color: #94a3b8; margin-bottom: 6px;">
         ${activity.time} · ${activity.location}
       </div>
-      <div style="font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 6px;">
+      <div style="font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 8px;">
         ${activity.description.substring(0, 120)}${activity.description.length > 120 ? '…' : ''}
       </div>
-      <div style="display: flex; align-items: center; gap: 8px; font-size: 10px;">
+      <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 10px;">
         <span style="
           display: inline-flex; padding: 2px 8px; border-radius: 9999px;
           background: ${color}22; color: ${color}; border: 1px solid ${color}33;
+          text-transform: capitalize;
         ">${activity.category}</span>
         ${activity.isHiddenGem ? '<span style="color: #f5d98a;">✨ Hidden Gem</span>' : ''}
-        ${activity.estimatedCost ? `<span style="color: #94a3b8;">₹${activity.estimatedCost.toLocaleString()}</span>` : ''}
+        ${activity.estimatedCost ? `<span style="color: #94a3b8; margin-left: auto;">₹${activity.estimatedCost.toLocaleString()}</span>` : ''}
       </div>
       ${activity.photographyTip ? `
-        <div style="font-size: 10px; color: #a855f7; margin-top: 6px; padding-top: 6px; border-top: 1px solid #1e293b;">
-          📸 ${activity.photographyTip.substring(0, 80)}
+        <div style="font-size: 10px; color: #a855f7; margin-top: 8px; padding-top: 6px; border-top: 1px solid #1e293b;">
+          📸 ${activity.photographyTip.substring(0, 80)}${activity.photographyTip.length > 80 ? '…' : ''}
         </div>
       ` : ''}
     </div>

@@ -264,19 +264,67 @@
   overflow: hidden;
 }
 
-.mapboxgl-ctrl-group button {
-  background: transparent !important;
-  border-color: rgba(255, 255, 255, 0.06) !important;
+/* ── MapLibre GL overrides (dark theme) ────────────── */
+
+.maplibregl-ctrl-group {
+  background: rgba(10, 14, 26, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
 }
 
-.mapboxgl-ctrl-group button + button {
+.maplibregl-ctrl-group button {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.maplibregl-ctrl-group button + button {
   border-top: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
-.mapboxgl-ctrl-group button:hover {
+.maplibregl-ctrl-group button:hover {
   background: rgba(255, 255, 255, 0.1) !important;
 }
 
-.mapboxgl-ctrl-group button .mapboxgl-ctrl-icon {
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
   filter: invert(1) brightness(0.8);
+}
+
+.maplibregl-ctrl-attrib {
+  background: rgba(10, 14, 26, 0.7) !important;
+  color: rgba(255,255,255,0.3) !important;
+  font-size: 9px !important;
+  border-radius: 6px 0 0 0 !important;
+}
+
+.maplibregl-ctrl-attrib a {
+  color: rgba(255,255,255,0.35) !important;
+}
+
+/* Popup container */
+.maplibregl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: none !important;
+}
+
+.maplibregl-popup-tip {
+  border-top-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.maplibregl-popup-close-button {
+  color: rgba(255,255,255,0.4) !important;
+  font-size: 16px !important;
+  padding: 4px 8px !important;
+  line-height: 1 !important;
+}
+
+.maplibregl-popup-close-button:hover {
+  color: rgba(255,255,255,0.8) !important;
+  background: rgba(255,255,255,0.08) !important;
+  border-radius: 4px;
 }

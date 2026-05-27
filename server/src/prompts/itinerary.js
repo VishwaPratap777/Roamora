@@ -168,6 +168,38 @@ export function buildUserPrompt(preferences) {
     packed: '6-8 activities per day. Maximum exploration, early starts, late evenings. For travelers who want to see everything.',
   };
 
+  const transportDescriptions = {
+    flight: 'Traveling by flight — include airport drop-off/pick-up logistics, typical flight duration, and arrival transfer in Day 1.',
+    train: 'Traveling by train — include station departure, estimated journey time, and scenic route notes for Day 1.',
+    bus: 'Traveling by bus/coach — include bus terminal logistics, expected travel time, and comfort tips for Day 1.',
+    'self-drive': 'Road trip by personal vehicle — include drive distance, key fuel stops, scenic highway notes, and estimated drive time as a transport activity on Day 1.',
+    any: 'Transport mode is flexible — suggest the best option based on distance and budget.',
+  };
+
+  const vehicleNotes = {
+    bike: 'Vehicle: motorcycle/scooter — ideal for mountain roads, narrow lanes. Include fuel cost at ~₹5/km, note pillion restrictions.',
+    car: 'Vehicle: car/sedan — standard fuel at ~₹8/km. Note road conditions and parking situations.',
+    suv: 'Vehicle: SUV/4WD — high clearance for rough mountain roads. Fuel at ~₹12/km. Perfect for off-road spots.',
+  };
+
+  // Build transport block
+  let transportBlock = '';
+  if (preferences.startingFrom) {
+    transportBlock += `\n**Starting Location**: ${preferences.startingFrom}`;
+  }
+  if (preferences.transportMode && preferences.transportMode !== 'any') {
+    transportBlock += `\n**Mode of Transport**: ${preferences.transportMode}`;
+    const desc = transportDescriptions[preferences.transportMode];
+    if (desc) transportBlock += `\n${desc}`;
+  }
+  if (preferences.transportMode === 'self-drive' && preferences.vehicleType) {
+    const vNote = vehicleNotes[preferences.vehicleType];
+    if (vNote) transportBlock += `\n${vNote}`;
+  }
+  if (transportBlock) {
+    transportBlock = `\n**Reachability & Getting There**:${transportBlock}\n`;
+  }
+
   return `Generate a ${preferences.duration}-day travel itinerary for:
 
 **Destination**: ${preferences.destination}
@@ -183,12 +215,13 @@ ${vibes}
 **Energy Level**: ${preferences.energy} — ${energyDescriptions[preferences.energy] || 'Moderate pace'}
 
 ${preferences.startDate ? `**Start Date**: ${preferences.startDate}` : ''}
-
+${transportBlock}
 Remember:
 - Focus heavily on HIDDEN GEMS and underrated spots
 - Include realistic cost estimates in INR
 - Provide accurate GPS coordinates for every location
 - Optimize the route to minimize travel time between locations
 - Each day should have a compelling, poetic title
-- Activities should flow naturally through the day`;
+- Activities should flow naturally through the day
+- If a starting location is provided, make Day 1's first activity a realistic "Getting There" transport activity with estimated travel time and cost`;
 }

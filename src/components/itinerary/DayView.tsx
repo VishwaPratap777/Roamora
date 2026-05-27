@@ -1,12 +1,23 @@
 import { motion } from 'framer-motion';
 import ActivityCard from './ActivityCard';
 import type { ItineraryDay } from '../../types';
+import { useActivityOverrides } from '../../hooks/useActivityOverrides';
 
 interface DayViewProps {
   day: ItineraryDay;
+  itineraryId: string;
 }
 
-export default function DayView({ day }: DayViewProps) {
+export default function DayView({ day, itineraryId }: DayViewProps) {
+  const { isSkipped, isDeleted, toggleSkip, deleteActivity } = useActivityOverrides(itineraryId);
+
+  // Filter deleted activities; keep skipped ones (just dim them)
+  const visibleActivities = day.activities.filter((a) => !isDeleted(a.id));
+
+  const skippedCount = visibleActivities.filter((a) => isSkipped(a.id)).length;
+  const activeActivities = visibleActivities.filter((a) => !isSkipped(a.id));
+  const activeCost = activeActivities.reduce((sum, a) => sum + (a.estimatedCost || 0), 0);
+
   return (
     <motion.div
       key={day.dayNumber}
@@ -56,28 +67,46 @@ export default function DayView({ day }: DayViewProps) {
 
       {/* Activities Timeline */}
       <div className="space-y-0">
-        {day.activities.map((activity, i) => (
+        {visibleActivities.map((activity, i) => (
           <ActivityCard
             key={activity.id}
             activity={activity}
             index={i}
-            isLast={i === day.activities.length - 1}
+            isLast={i === visibleActivities.length - 1}
+            isSkipped={isSkipped(activity.id)}
+            onSkip={toggleSkip}
+            onDelete={deleteActivity}
           />
         ))}
       </div>
 
-      {/* Day Cost Footer */}
-      {day.totalCost !== undefined && (
+      {/* Skipped / Active cost summary */}
+      {(skippedCount > 0 || day.totalCost !== undefined) && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.5 }}
-          className="mt-8 flex items-center justify-between px-5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06]"
+          className="mt-8 space-y-2"
         >
-          <span className="text-xs text-white/40 font-accent">Day {day.dayNumber} Total</span>
-          <span className="text-sm font-heading text-gradient-gold">
-            ₹{day.totalCost.toLocaleString('en-IN')}
-          </span>
+          {skippedCount > 0 && (
+            <div className="flex items-center justify-between px-5 py-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
+              <span className="text-xs text-white/30 font-accent">
+                {skippedCount} {skippedCount === 1 ? 'activity' : 'activities'} skipped
+              </span>
+              <span className="text-xs text-white/25 font-accent">
+                Active budget: ₹{activeCost.toLocaleString('en-IN')}
+              </span>
+            </div>
+          )}
+
+          {day.totalCost !== undefined && (
+            <div className="flex items-center justify-between px-5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+              <span className="text-xs text-white/40 font-accent">Day {day.dayNumber} Total</span>
+              <span className="text-sm font-heading text-gradient-gold">
+                ₹{day.totalCost.toLocaleString('en-IN')}
+              </span>
+            </div>
+          )}
         </motion.div>
       )}
     </motion.div>

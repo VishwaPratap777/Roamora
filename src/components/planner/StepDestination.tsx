@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Search, Calendar, Minus, Plus } from 'lucide-react';
-import type { TripPreferences } from '../../types';
+import { MapPin, Search, Calendar, Minus, Plus, Navigation, PlaneTakeoff, Train, Bus, Car, Compass } from 'lucide-react';
+import type { TripPreferences, TransportMode, VehicleType } from '../../types';
 import { FEATURED_DESTINATIONS } from '../../lib/constants';
 
 interface StepDestinationProps {
@@ -10,9 +10,24 @@ interface StepDestinationProps {
   onNext: () => void;
 }
 
+const TRANSPORT_OPTIONS: { value: TransportMode; label: string; icon: React.ReactNode; color: string }[] = [
+  { value: 'flight', label: 'Flight', icon: <PlaneTakeoff className="w-4 h-4" />, color: 'text-sky-400 border-sky-400/30 bg-sky-400/10' },
+  { value: 'train', label: 'Train', icon: <Train className="w-4 h-4" />, color: 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10' },
+  { value: 'bus', label: 'Bus', icon: <Bus className="w-4 h-4" />, color: 'text-amber-400 border-amber-400/30 bg-amber-400/10' },
+  { value: 'self-drive', label: 'Road Trip', icon: <Car className="w-4 h-4" />, color: 'text-orange-400 border-orange-400/30 bg-orange-400/10' },
+  { value: 'any', label: 'Flexible', icon: <Compass className="w-4 h-4" />, color: 'text-violet-400 border-violet-400/30 bg-violet-400/10' },
+];
+
+const VEHICLE_OPTIONS: { value: VehicleType; label: string; emoji: string }[] = [
+  { value: 'bike', label: 'Bike/Scooter', emoji: '🏍️' },
+  { value: 'car', label: 'Car/Sedan', emoji: '🚗' },
+  { value: 'suv', label: 'SUV/4WD', emoji: '🚙' },
+];
+
 export default function StepDestination({ preferences, onChange, onNext }: StepDestinationProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState(preferences.destination);
+  const [showTransport, setShowTransport] = useState(!!(preferences.startingFrom || preferences.transportMode));
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Filter destinations by search query
@@ -42,9 +57,10 @@ export default function StepDestination({ preferences, onChange, onNext }: StepD
   const canProceed = preferences.destination.trim().length >= 2 && preferences.duration >= 1;
 
   useEffect(() => {
-    // Auto-focus the input on mount
     inputRef.current?.focus();
   }, []);
+
+  const isSelfDrive = preferences.transportMode === 'self-drive';
 
   return (
     <motion.div
@@ -175,6 +191,112 @@ export default function StepDestination({ preferences, onChange, onNext }: StepD
           onChange={(e) => onChange({ startDate: e.target.value || undefined })}
           className="w-full px-5 py-3 rounded-xl border border-white/10 bg-white/[0.04] text-white/80 outline-none focus:border-primary-400/40 transition-colors [color-scheme:dark]"
         />
+      </div>
+
+      {/* Transport & Reachability (collapsible) */}
+      <div className="space-y-3">
+        <button
+          type="button"
+          onClick={() => setShowTransport((v) => !v)}
+          className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors cursor-pointer group"
+        >
+          <Navigation className="w-3.5 h-3.5 group-hover:text-primary-400 transition-colors" />
+          <span>Getting there</span>
+          <span className="text-white/20 text-xs">(optional)</span>
+          <motion.span
+            animate={{ rotate: showTransport ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            className="ml-1 text-white/25"
+          >
+            ▾
+          </motion.span>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {showTransport && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.35 }}
+              className="overflow-hidden space-y-4"
+            >
+              {/* Starting From */}
+              <div className="flex items-center gap-3 px-5 py-3.5 rounded-xl border border-white/10 bg-white/[0.04]">
+                <Navigation className="w-4 h-4 text-primary-400/60 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={preferences.startingFrom || ''}
+                  onChange={(e) => onChange({ startingFrom: e.target.value || undefined })}
+                  placeholder="Starting from… (e.g. Delhi, Mumbai)"
+                  className="flex-1 bg-transparent text-white/80 placeholder-white/25 outline-none text-sm"
+                />
+              </div>
+
+              {/* Transport mode chips */}
+              <div className="space-y-2">
+                <div className="text-xs text-white/30">Preferred Transport</div>
+                <div className="flex flex-wrap gap-2">
+                  {TRANSPORT_OPTIONS.map((opt) => {
+                    const selected = preferences.transportMode === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() =>
+                          onChange({ transportMode: selected ? undefined : opt.value })
+                        }
+                        className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs font-medium transition-all duration-200 cursor-pointer ${
+                          selected
+                            ? opt.color
+                            : 'border-white/10 bg-white/[0.04] text-white/40 hover:border-white/20 hover:text-white/60'
+                        }`}
+                      >
+                        {opt.icon}
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Vehicle type (only for self-drive) */}
+              <AnimatePresence>
+                {isSelfDrive && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden space-y-2"
+                  >
+                    <div className="text-xs text-white/30">Vehicle Type</div>
+                    <div className="flex gap-2">
+                      {VEHICLE_OPTIONS.map((v) => {
+                        const selected = preferences.vehicleType === v.value;
+                        return (
+                          <button
+                            key={v.value}
+                            type="button"
+                            onClick={() => onChange({ vehicleType: selected ? undefined : v.value })}
+                            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-xs transition-all cursor-pointer ${
+                              selected
+                                ? 'border-orange-400/30 bg-orange-400/10 text-orange-300'
+                                : 'border-white/10 bg-white/[0.04] text-white/40 hover:border-white/20'
+                            }`}
+                          >
+                            <span>{v.emoji}</span>
+                            {v.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Next Button */}

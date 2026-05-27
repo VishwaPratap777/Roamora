@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Eye, UtensilsCrossed, Mountain, Camera, Tent,
   Landmark, Car, Coffee, MapPin, Sparkles,
-  ChevronDown, Drone, Gauge,
+  ChevronDown, Gauge, Trash2, CheckCircle2, Circle,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { ItineraryActivity } from '../../types';
@@ -12,6 +12,9 @@ interface ActivityCardProps {
   activity: ItineraryActivity;
   index: number;
   isLast: boolean;
+  isSkipped?: boolean;
+  onSkip?: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 const CATEGORY_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
@@ -31,8 +34,11 @@ const DIFFICULTY_CONFIG: Record<string, { label: string; color: string }> = {
   hard: { label: 'Hard', color: 'text-red-400 bg-red-400/10 border-red-400/20' },
 };
 
-export default function ActivityCard({ activity, index, isLast }: ActivityCardProps) {
+export default function ActivityCard({
+  activity, index, isLast, isSkipped = false, onSkip, onDelete,
+}: ActivityCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const category = CATEGORY_CONFIG[activity.category] || CATEGORY_CONFIG.sightseeing;
   const difficulty = activity.difficulty ? DIFFICULTY_CONFIG[activity.difficulty] : null;
@@ -40,25 +46,45 @@ export default function ActivityCard({ activity, index, isLast }: ActivityCardPr
   const hasDetails =
     activity.photographyTip || activity.goldenHourInfo || activity.droneAllowed !== undefined || difficulty;
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (showDeleteConfirm) {
+      onDelete?.(activity.id);
+    } else {
+      setShowDeleteConfirm(true);
+      setTimeout(() => setShowDeleteConfirm(false), 3000);
+    }
+  };
+
+  const handleSkip = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onSkip?.(activity.id);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
+      animate={{ opacity: isSkipped ? 0.4 : 1, x: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08 }}
-      className="flex gap-4 md:gap-6"
+      className="flex gap-4 md:gap-6 group/row"
     >
       {/* Timeline Column */}
       <div className="flex flex-col items-center flex-shrink-0 w-16 md:w-20">
         {/* Time Badge */}
-        <div className="text-xs font-accent font-medium text-primary-300 whitespace-nowrap mb-2 mt-1">
+        <div className={cn(
+          'text-xs font-accent font-medium whitespace-nowrap mb-2 mt-1 transition-colors',
+          isSkipped ? 'text-white/25 line-through' : 'text-primary-300'
+        )}>
           {activity.time}
         </div>
         {/* Timeline dot */}
         <div className={cn(
           'w-3 h-3 rounded-full border-2 flex-shrink-0',
-          activity.isHiddenGem
-            ? 'border-primary-400 bg-primary-400/30 shadow-[0_0_8px_rgba(200,164,78,0.4)]'
-            : 'border-white/30 bg-white/10'
+          isSkipped
+            ? 'border-white/15 bg-white/5'
+            : activity.isHiddenGem
+              ? 'border-primary-400 bg-primary-400/30 shadow-[0_0_8px_rgba(200,164,78,0.4)]'
+              : 'border-white/30 bg-white/10'
         )} />
         {/* Timeline line */}
         {!isLast && (
@@ -71,23 +97,25 @@ export default function ActivityCard({ activity, index, isLast }: ActivityCardPr
         <div
           className={cn(
             'rounded-2xl border bg-white/[0.03] backdrop-blur-sm overflow-hidden transition-all duration-300',
-            activity.isHiddenGem
-              ? 'border-primary-400/20 hover:border-primary-400/30'
-              : 'border-white/[0.08] hover:border-white/[0.14]',
-            hasDetails && 'cursor-pointer'
+            isSkipped
+              ? 'border-white/[0.04] opacity-60'
+              : activity.isHiddenGem
+                ? 'border-primary-400/20 hover:border-primary-400/30'
+                : 'border-white/[0.08] hover:border-white/[0.14]',
+            hasDetails && !isSkipped && 'cursor-pointer'
           )}
-          onClick={() => hasDetails && setIsExpanded(!isExpanded)}
+          onClick={() => !isSkipped && hasDetails && setIsExpanded(!isExpanded)}
         >
           {/* Main Content */}
           <div className="px-5 py-4">
-            {/* Top row: badges */}
+            {/* Top row: badges + controls */}
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className={cn('flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border', category.bg, category.color)}>
                 {category.icon}
                 <span className="capitalize">{activity.category}</span>
               </span>
 
-              {activity.isHiddenGem && (
+              {activity.isHiddenGem && !isSkipped && (
                 <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-primary-400/15 text-primary-300 border border-primary-400/20">
                   <Sparkles className="w-3 h-3" />
                   Hidden Gem
@@ -95,30 +123,85 @@ export default function ActivityCard({ activity, index, isLast }: ActivityCardPr
               )}
 
               {activity.estimatedCost !== undefined && activity.estimatedCost > 0 && (
-                <span className="text-[10px] text-white/30 ml-auto font-accent">
+                <span className={cn(
+                  'text-[10px] ml-auto font-accent transition-colors',
+                  isSkipped ? 'text-white/20 line-through' : 'text-white/30'
+                )}>
                   ₹{activity.estimatedCost.toLocaleString('en-IN')}
                 </span>
+              )}
+
+              {/* Skip toggle + Delete — visible on hover */}
+              {(onSkip || onDelete) && (
+                <div className="flex items-center gap-1.5 ml-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                  {onSkip && (
+                    <button
+                      type="button"
+                      onClick={handleSkip}
+                      title={isSkipped ? 'Include activity' : 'Skip activity'}
+                      className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition-all"
+                    >
+                      {isSkipped
+                        ? <Circle className="w-3.5 h-3.5 text-white/30" />
+                        : <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400/70" />
+                      }
+                    </button>
+                  )}
+                  {onDelete && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      title={showDeleteConfirm ? 'Click again to confirm delete' : 'Remove activity'}
+                      className={cn(
+                        'w-6 h-6 flex items-center justify-center rounded-full transition-all',
+                        showDeleteConfirm
+                          ? 'bg-red-500/20 hover:bg-red-500/30'
+                          : 'hover:bg-white/10'
+                      )}
+                    >
+                      <Trash2 className={cn(
+                        'w-3.5 h-3.5 transition-colors',
+                        showDeleteConfirm ? 'text-red-400' : 'text-white/25 hover:text-red-400'
+                      )} />
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
             {/* Title */}
-            <h4 className="text-base font-medium text-white/90 mb-1.5">
+            <h4 className={cn(
+              'text-base font-medium mb-1.5 transition-colors',
+              isSkipped ? 'text-white/30 line-through' : 'text-white/90'
+            )}>
               {activity.title}
             </h4>
 
             {/* Description */}
-            <p className="text-sm text-white/50 leading-relaxed mb-2">
-              {activity.description}
-            </p>
+            {!isSkipped && (
+              <p className="text-sm text-white/50 leading-relaxed mb-2">
+                {activity.description}
+              </p>
+            )}
 
             {/* Location */}
-            <div className="flex items-center gap-1.5 text-xs text-white/35">
+            <div className={cn(
+              'flex items-center gap-1.5 text-xs',
+              isSkipped ? 'text-white/20' : 'text-white/35'
+            )}>
               <MapPin className="w-3 h-3" />
               <span>{activity.location}</span>
             </div>
 
+            {/* Skipped label */}
+            {isSkipped && (
+              <div className="mt-2 text-[10px] text-white/25 italic">
+                Skipped — click toggle to re-include
+              </div>
+            )}
+
             {/* Expand indicator */}
-            {hasDetails && (
+            {hasDetails && !isSkipped && (
               <div className="flex items-center justify-center mt-3">
                 <motion.div
                   animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -132,7 +215,7 @@ export default function ActivityCard({ activity, index, isLast }: ActivityCardPr
 
           {/* Expandable Details */}
           <AnimatePresence>
-            {isExpanded && hasDetails && (
+            {isExpanded && hasDetails && !isSkipped && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
@@ -176,8 +259,7 @@ export default function ActivityCard({ activity, index, isLast }: ActivityCardPr
                           ? 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20'
                           : 'text-red-400 bg-red-400/10 border-red-400/20'
                       )}>
-                        <Drone className="w-3 h-3" />
-                        {activity.droneAllowed ? 'Drone Allowed' : 'No Drones'}
+                        🚁 {activity.droneAllowed ? 'Drone OK' : 'No Drones'}
                       </span>
                     )}
                   </div>
@@ -186,6 +268,20 @@ export default function ActivityCard({ activity, index, isLast }: ActivityCardPr
             )}
           </AnimatePresence>
         </div>
+
+        {/* Delete confirm hint */}
+        <AnimatePresence>
+          {showDeleteConfirm && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-1.5 text-[10px] text-red-400/70 px-1"
+            >
+              Click 🗑️ again to confirm removal
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

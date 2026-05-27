@@ -6,6 +6,8 @@ export type BudgetType = 'backpacker' | 'balanced' | 'luxury';
 export type TravelVibe = 'adventure' | 'photography' | 'food' | 'spiritual' | 'nature' | 'hidden-gems' | 'roadtrip';
 export type TripType = 'solo' | 'couple' | 'friends' | 'family';
 export type EnergyLevel = 'relaxed' | 'moderate' | 'packed';
+export type TransportMode = 'flight' | 'train' | 'bus' | 'self-drive' | 'any';
+export type VehicleType = 'bike' | 'car' | 'suv';
 
 export interface TripPreferences {
   destination: string;
@@ -15,6 +17,9 @@ export interface TripPreferences {
   energy: EnergyLevel;
   duration: number; // days
   startDate?: string;
+  startingFrom?: string;        // departure city/location
+  transportMode?: TransportMode; // preferred mode of transport
+  vehicleType?: VehicleType;    // only relevant for self-drive
 }
 
 export interface ItineraryActivity {
@@ -31,6 +36,7 @@ export interface ItineraryActivity {
   photographyTip?: string;
   goldenHourInfo?: string;
   droneAllowed?: boolean;
+  skipped?: boolean; // local override — user opted out
 }
 
 export interface ItineraryDay {

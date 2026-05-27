@@ -10,6 +10,8 @@ import DayView from '../components/itinerary/DayView';
 import TripSummary from '../components/itinerary/TripSummary';
 import ItineraryActions from '../components/itinerary/ItineraryActions';
 import ItineraryMap from '../components/itinerary/ItineraryMap';
+import WeatherBar from '../components/itinerary/WeatherBar';
+import HiddenGemPanel from '../components/itinerary/HiddenGemPanel';
 
 export default function ItineraryPage() {
   const { id } = useParams<{ id: string }>();
@@ -94,6 +96,14 @@ export default function ItineraryPage() {
       {/* Itinerary Header */}
       <ItineraryHeader itinerary={itinerary} />
 
+      {/* Weather Bar — shows only when VITE_OPENWEATHER_API_KEY is set */}
+      <WeatherBar
+        destination={itinerary.destination}
+        days={itinerary.days}
+        activeDay={activeDay}
+        startDate={itinerary.preferences?.startDate}
+      />
+
       {/* Day Selector */}
       <DaySelector
         days={itinerary.days}
@@ -107,7 +117,11 @@ export default function ItineraryPage() {
           {/* Timeline (left side on desktop) */}
           <div className="flex-1 min-w-0">
             <AnimatePresence mode="wait">
-              <DayView key={currentDay.dayNumber} day={currentDay} />
+              <DayView
+                key={currentDay.dayNumber}
+                day={currentDay}
+                itineraryId={itinerary.id}
+              />
             </AnimatePresence>
           </div>
 
@@ -129,7 +143,15 @@ export default function ItineraryPage() {
         <div className="h-[1px] bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
       </div>
 
-      {/* Trip Summary */}
+      {/* Hidden Gems Discovery Panel */}
+      <HiddenGemPanel itinerary={itinerary} />
+
+      {/* Divider */}
+      <div className="max-w-3xl mx-auto px-6 md:px-12">
+        <div className="h-[1px] bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+      </div>
+
+      {/* Trip Summary (with BudgetOptimizer inside) */}
       <TripSummary itinerary={itinerary} />
 
       {/* Divider */}

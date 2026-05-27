@@ -1,8 +1,24 @@
 import { motion } from 'framer-motion';
 import {
   Wallet, ShoppingBag, Lightbulb, Check,
+  PlaneTakeoff, Train, Bus, Car, Compass,
 } from 'lucide-react';
 import type { Itinerary } from '../../types';
+import BudgetOptimizer from './BudgetOptimizer';
+
+const TRANSPORT_ICONS: Record<string, React.ReactNode> = {
+  flight: <PlaneTakeoff className="w-4 h-4 text-sky-400" />,
+  train: <Train className="w-4 h-4 text-emerald-400" />,
+  bus: <Bus className="w-4 h-4 text-amber-400" />,
+  'self-drive': <Car className="w-4 h-4 text-orange-400" />,
+  any: <Compass className="w-4 h-4 text-violet-400" />,
+};
+
+const VEHICLE_LABELS: Record<string, string> = {
+  bike: '🏍️ Motorcycle/Scooter',
+  car: '🚗 Car/Sedan',
+  suv: '🚙 SUV/4WD',
+};
 
 interface TripSummaryProps {
   itinerary: Itinerary;
@@ -29,7 +45,48 @@ export default function TripSummary({ itinerary }: TripSummaryProps) {
         <p className="text-sm text-white/40">Everything you need to know at a glance</p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Transport Getting There card */}
+      {itinerary.preferences?.startingFrom && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-sm p-6 mb-6"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-sky-400/15 flex items-center justify-center">
+              {TRANSPORT_ICONS[itinerary.preferences.transportMode || 'any']}
+            </div>
+            <h3 className="text-sm font-medium text-white/70">Getting There</h3>
+          </div>
+          <div className="flex flex-wrap gap-6">
+            <div>
+              <div className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Starting From</div>
+              <div className="text-sm text-white/80">{itinerary.preferences.startingFrom}</div>
+            </div>
+            <div>
+              <div className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Transport</div>
+              <div className="text-sm text-white/80 capitalize">
+                {itinerary.preferences.transportMode || 'Flexible'}
+              </div>
+            </div>
+            {itinerary.preferences.vehicleType && (
+              <div>
+                <div className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Vehicle</div>
+                <div className="text-sm text-white/80">
+                  {VEHICLE_LABELS[itinerary.preferences.vehicleType] || itinerary.preferences.vehicleType}
+                </div>
+              </div>
+            )}
+            <div>
+              <div className="text-[10px] text-white/30 uppercase tracking-wider mb-1">Destination</div>
+              <div className="text-sm text-white/80">{itinerary.destination}</div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Budget Breakdown */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -140,6 +197,9 @@ export default function TripSummary({ itinerary }: TripSummaryProps) {
             ))}
           </ol>
         </motion.div>
+
+        {/* Budget Optimizer */}
+        <BudgetOptimizer itinerary={itinerary} />
       </div>
     </div>
   );

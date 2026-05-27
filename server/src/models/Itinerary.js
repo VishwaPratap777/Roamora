@@ -20,7 +20,6 @@ const ActivitySchema = new mongoose.Schema(
     description: { type: String, required: true },
     category: {
       type: String,
-      enum: ['sightseeing', 'food', 'trek', 'photography', 'camping', 'cultural', 'transport', 'rest'],
       required: true,
     },
     location: { type: String, required: true },
@@ -28,7 +27,6 @@ const ActivitySchema = new mongoose.Schema(
     estimatedCost: { type: Number, default: 0 },
     difficulty: {
       type: String,
-      enum: ['easy', 'moderate', 'hard'],
       default: 'easy',
     },
     isHiddenGem: { type: Boolean, default: false },

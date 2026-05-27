@@ -58,7 +58,29 @@ export async function apiFetch<T>(
     ...options,
   });
 
-  const data = await response.json();
+  // Robustly parse the response depending on its content type
+  let data: any = {};
+  const contentType = response.headers.get('content-type');
+
+  if (contentType && contentType.includes('application/json')) {
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      data = { error: 'Failed to parse JSON response from server' };
+    }
+  } else {
+    try {
+      const text = await response.text();
+      // If it looks like HTML (common for Gateway/Proxy errors), extract readable text or use status
+      if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+        data = { error: `Server error: ${response.statusText || response.status}` };
+      } else {
+        data = { error: text || `Request failed with status ${response.status}` };
+      }
+    } catch {
+      data = { error: `Request failed with status ${response.status}` };
+    }
+  }
 
   if (!response.ok) {
     throw new ApiError(

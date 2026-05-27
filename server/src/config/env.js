@@ -12,6 +12,9 @@ const config = {
   PORT: parseInt(process.env.PORT || '3001', 10),
   OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
   GROQ_API_KEY: process.env.GROQ_API_KEY || '',
+  MONGODB_URI: process.env.MONGODB_URI || '',
+  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY || '',
+  CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY || '',
   NODE_ENV: process.env.NODE_ENV || 'development',
 };
 
@@ -24,6 +27,12 @@ if (!config.GROQ_API_KEY) {
 }
 if (!config.OPENAI_API_KEY && !config.GROQ_API_KEY) {
   console.error('❌ No AI provider configured! Set at least one of OPENAI_API_KEY or GROQ_API_KEY');
+}
+if (!config.MONGODB_URI) {
+  console.warn('⚠️  MONGODB_URI not set — database unavailable');
+}
+if (!config.CLERK_SECRET_KEY) {
+  console.warn('⚠️  CLERK_SECRET_KEY not set — authentication unavailable');
 }
 
 export default config;

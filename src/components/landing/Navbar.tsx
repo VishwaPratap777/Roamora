@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Menu, X } from 'lucide-react';
+import { Moon, Menu, X, LayoutDashboard } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import logo from '../../assets/logo.png';
 import { NAV_LINKS } from '../../lib/constants';
+import AuthButton from '../ui/AuthButton';
 
 export default function Navbar() {
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const clerkConfigured = !!import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -66,6 +70,17 @@ export default function Navbar() {
 
           {/* Right Side */}
           <div className="hidden md:flex items-center gap-4">
+            {/* Dashboard Link */}
+            {clerkConfigured && (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white/80 transition-colors cursor-pointer"
+              >
+                <LayoutDashboard size={16} />
+                <span>Dashboard</span>
+              </button>
+            )}
+
             {/* Dark Mode Toggle */}
             <button
               className="p-2 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-all duration-300"
@@ -74,10 +89,17 @@ export default function Navbar() {
               <Moon size={18} />
             </button>
 
-            {/* Sign In Button */}
-            <button className="px-5 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white text-sm font-medium hover:bg-white/20 hover:border-white/20 transition-all duration-300">
-              Sign In
-            </button>
+            {/* Auth Button */}
+            {clerkConfigured ? (
+              <AuthButton />
+            ) : (
+              <button
+                onClick={() => navigate('/sign-in')}
+                className="px-5 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white text-sm font-medium hover:bg-white/20 hover:border-white/20 transition-all duration-300 cursor-pointer"
+              >
+                Sign In
+              </button>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -115,13 +137,29 @@ export default function Navbar() {
                   {link.label}
                 </a>
               ))}
+              {clerkConfigured && (
+                <a
+                  href="/dashboard"
+                  className="text-lg font-body text-white/60 transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </a>
+              )}
               <div className="mt-4 flex items-center gap-4">
                 <button className="p-2 rounded-full text-white/60 hover:text-white">
                   <Moon size={18} />
                 </button>
-                <button className="px-5 py-2 rounded-full bg-white/10 border border-white/10 text-white text-sm font-medium">
-                  Sign In
-                </button>
+                {clerkConfigured ? (
+                  <AuthButton />
+                ) : (
+                  <button
+                    onClick={() => { navigate('/sign-in'); setIsMobileMenuOpen(false); }}
+                    className="px-5 py-2 rounded-full bg-white/10 border border-white/10 text-white text-sm font-medium cursor-pointer"
+                  >
+                    Sign In
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>

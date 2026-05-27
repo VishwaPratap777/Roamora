@@ -1,11 +1,13 @@
 /* =====================================================
-   Itinerary Generation Route
+   Itinerary Routes — CRUD + AI Generation
    ===================================================== */
 
 import { Router } from 'express';
 import { generateWithOpenAI } from '../services/openai.js';
 import { generateWithGroq } from '../services/groq.js';
 import { createRateLimiter } from '../middleware/rateLimit.js';
+import { optionalAuth, requireAuth } from '../middleware/auth.js';
+import Itinerary from '../models/Itinerary.js';
 import config from '../config/env.js';
 
 const router = Router();
@@ -59,9 +61,9 @@ function validatePreferences(body) {
 
 /**
  * POST /api/itinerary/generate
- * Generate an AI-powered travel itinerary
+ * Generate an AI-powered travel itinerary and save to MongoDB
  */
-router.post('/generate', limiter, async (req, res, next) => {
+router.post('/generate', optionalAuth, limiter, async (req, res, next) => {
   try {
     // Validate input
     const errors = validatePreferences(req.body);
@@ -83,26 +85,26 @@ router.post('/generate', limiter, async (req, res, next) => {
       startDate: req.body.startDate || undefined,
     };
 
-    let itinerary;
+    let aiResult;
     let provider;
 
     // Try OpenAI first, fall back to Groq
     if (config.OPENAI_API_KEY) {
       try {
-        itinerary = await generateWithOpenAI(preferences);
+        aiResult = await generateWithOpenAI(preferences);
         provider = 'openai';
       } catch (openaiError) {
         console.warn('⚠️  OpenAI failed, falling back to Groq:', openaiError.message);
 
         if (config.GROQ_API_KEY) {
-          itinerary = await generateWithGroq(preferences);
+          aiResult = await generateWithGroq(preferences);
           provider = 'groq';
         } else {
           throw openaiError; // No fallback available
         }
       }
     } else if (config.GROQ_API_KEY) {
-      itinerary = await generateWithGroq(preferences);
+      aiResult = await generateWithGroq(preferences);
       provider = 'groq';
     } else {
       return res.status(503).json({
@@ -111,19 +113,131 @@ router.post('/generate', limiter, async (req, res, next) => {
       });
     }
 
-    // Construct full itinerary response
-    const response = {
-      id: `itin-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-      ...itinerary,
+    // Extract userId from Clerk auth (null if unauthenticated)
+    const userId = req.auth?.userId || null;
+
+    // Save to MongoDB
+    const itinerary = new Itinerary({
+      userId,
+      destination: aiResult.destination || preferences.destination,
       preferences,
-      createdAt: new Date().toISOString(),
+      days: aiResult.days || [],
+      totalBudget: aiResult.totalBudget || 0,
+      packingSuggestions: aiResult.packingSuggestions || [],
+      travelTips: aiResult.travelTips || [],
       provider,
-    };
+      isPublic: true, // default public for sharing
+    });
 
-    console.log(`🎉 Itinerary generated: ${preferences.destination} (${preferences.duration} days) via ${provider}`);
+    await itinerary.save();
 
-    res.json(response);
+    console.log(`🎉 Itinerary generated & saved: ${preferences.destination} (${preferences.duration} days) via ${provider} → ${itinerary.id}`);
+
+    res.json(itinerary.toJSON());
   } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/itinerary/user/me
+ * List all itineraries for the authenticated user
+ */
+router.get('/user/me', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.auth.userId;
+
+    const itineraries = await Itinerary.find({ userId })
+      .sort({ createdAt: -1 })
+      .select('-days') // Exclude full day data for listing (performance)
+      .lean();
+
+    // Transform _id to id
+    const results = itineraries.map((it) => ({
+      ...it,
+      id: it._id.toString(),
+      _id: undefined,
+      __v: undefined,
+    }));
+
+    res.json(results);
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/itinerary/:id
+ * Fetch a single itinerary by ID
+ */
+router.get('/:id', optionalAuth, async (req, res, next) => {
+  try {
+    const itinerary = await Itinerary.findById(req.params.id);
+
+    if (!itinerary) {
+      return res.status(404).json({
+        error: 'Itinerary not found',
+        status: 404,
+      });
+    }
+
+    // Access control: allow if public, or if user owns it
+    const userId = req.auth?.userId || null;
+    if (!itinerary.isPublic && itinerary.userId && itinerary.userId !== userId) {
+      return res.status(403).json({
+        error: 'You do not have access to this itinerary',
+        status: 403,
+      });
+    }
+
+    res.json(itinerary.toJSON());
+  } catch (error) {
+    // Handle invalid ObjectId format
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        error: 'Invalid itinerary ID format',
+        status: 400,
+      });
+    }
+    next(error);
+  }
+});
+
+/**
+ * DELETE /api/itinerary/:id
+ * Delete an itinerary (owner only)
+ */
+router.delete('/:id', requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.auth.userId;
+    const itinerary = await Itinerary.findById(req.params.id);
+
+    if (!itinerary) {
+      return res.status(404).json({
+        error: 'Itinerary not found',
+        status: 404,
+      });
+    }
+
+    if (itinerary.userId !== userId) {
+      return res.status(403).json({
+        error: 'You can only delete your own itineraries',
+        status: 403,
+      });
+    }
+
+    await Itinerary.findByIdAndDelete(req.params.id);
+
+    console.log(`🗑️ Itinerary deleted: ${itinerary.destination} (${itinerary.id}) by user ${userId}`);
+
+    res.json({ message: 'Itinerary deleted successfully' });
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({
+        error: 'Invalid itinerary ID format',
+        status: 400,
+      });
+    }
     next(error);
   }
 });

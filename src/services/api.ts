@@ -1,5 +1,5 @@
 /* =====================================================
-   API Base — Fetch wrapper with error handling
+   API Base — Fetch wrapper with auth support
    ===================================================== */
 
 const API_BASE = '/api';
@@ -17,7 +17,25 @@ export class ApiError extends Error {
 }
 
 /**
- * Base fetch wrapper with JSON parsing and error handling
+ * Get the auth token from Clerk (if available)
+ */
+async function getAuthToken(): Promise<string | null> {
+  try {
+    // Access Clerk from the window object (set by ClerkProvider)
+    const clerk = (window as any).__clerk_frontend_api
+      ? (window as any).Clerk
+      : null;
+    if (clerk?.session) {
+      return await clerk.session.getToken();
+    }
+  } catch {
+    // No auth available
+  }
+  return null;
+}
+
+/**
+ * Base fetch wrapper with JSON parsing, auth injection, and error handling
  */
 export async function apiFetch<T>(
   endpoint: string,
@@ -25,9 +43,16 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
 
+  // Try to attach auth token
+  const token = await getAuthToken();
+  const authHeaders: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options?.headers,
     },
     ...options,

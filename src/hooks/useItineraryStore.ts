@@ -1,15 +1,16 @@
 /* =====================================================
-   Itinerary Store — In-memory + localStorage persistence
+   Itinerary Store — API-backed with localStorage cache
    ===================================================== */
 
 import { useCallback, useSyncExternalStore } from 'react';
 import type { Itinerary } from '../types';
+import { fetchItinerary as apiFetchItinerary } from '../services/itineraryApi';
 
 const STORAGE_KEY = 'roamora_itineraries';
 
 /**
  * Module-level store — survives React re-renders.
- * localStorage provides persistence across page refreshes.
+ * localStorage provides offline cache, but API is the source of truth.
  */
 let store: Map<string, Itinerary> = new Map();
 let listeners: Set<() => void> = new Set();
@@ -49,11 +50,21 @@ function getSnapshot() {
 }
 
 /**
- * Save a generated itinerary to the store
+ * Save a generated itinerary to local cache (and persist)
  */
 export function saveItinerary(itinerary: Itinerary) {
   store = new Map(store);
   store.set(itinerary.id, itinerary);
+  persistToStorage();
+  emitChange();
+}
+
+/**
+ * Remove an itinerary from local cache
+ */
+export function removeItineraryFromCache(id: string) {
+  store = new Map(store);
+  store.delete(id);
   persistToStorage();
   emitChange();
 }
@@ -66,6 +77,21 @@ export function getItinerary(id: string): Itinerary | undefined {
 }
 
 /**
+ * Fetch itinerary from API and cache locally.
+ * Returns cached version immediately if available, then fetches fresh copy.
+ */
+export async function fetchAndCacheItinerary(id: string): Promise<Itinerary | null> {
+  try {
+    const itinerary = await apiFetchItinerary(id);
+    saveItinerary(itinerary);
+    return itinerary;
+  } catch {
+    // Return cached version if API fails
+    return store.get(id) || null;
+  }
+}
+
+/**
  * React hook — reactively get an itinerary by ID
  */
 export function useItinerary(id: string): Itinerary | undefined {
@@ -74,7 +100,7 @@ export function useItinerary(id: string): Itinerary | undefined {
 }
 
 /**
- * React hook — get all itineraries
+ * React hook — get all itineraries from local cache
  */
 export function useAllItineraries(): Itinerary[] {
   const currentStore = useSyncExternalStore(subscribe, getSnapshot);

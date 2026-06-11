@@ -21,10 +21,8 @@ export class ApiError extends Error {
  */
 async function getAuthToken(): Promise<string | null> {
   try {
-    // Access Clerk from the window object (set by ClerkProvider)
-    const clerk = (window as any).__clerk_frontend_api
-      ? (window as any).Clerk
-      : null;
+    // Access Clerk from the window object (set by ClerkProvider in Clerk v5+)
+    const clerk = (window as any).Clerk;
     if (clerk?.session) {
       return await clerk.session.getToken();
     }

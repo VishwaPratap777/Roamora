@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { ClerkProvider } from '@clerk/clerk-react'
 import './index.css'
 import App from './App.tsx'
+import AuthTokenProvider from './components/AuthTokenProvider.tsx'
 import { initLenis } from './hooks/useLenis.ts'
 
 // Bootstrap global smooth scroll before first paint
@@ -42,6 +43,7 @@ function Root() {
           },
         }}
       >
+        <AuthTokenProvider />
         <App />
       </ClerkProvider>
     </StrictMode>

@@ -17,14 +17,18 @@ export class ApiError extends Error {
 }
 
 /**
- * Get the auth token from Clerk (if available)
+ * Token provider — set by a React component that has access to Clerk's useAuth()
  */
+let _tokenProvider: (() => Promise<string | null>) | null = null;
+
+export function setTokenProvider(provider: () => Promise<string | null>) {
+  _tokenProvider = provider;
+}
+
 async function getAuthToken(): Promise<string | null> {
   try {
-    // Access Clerk from the window object (set by ClerkProvider in Clerk v5+)
-    const clerk = (window as any).Clerk;
-    if (clerk?.session) {
-      return await clerk.session.getToken();
+    if (_tokenProvider) {
+      return await _tokenProvider();
     }
   } catch {
     // No auth available

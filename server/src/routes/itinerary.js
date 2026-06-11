@@ -9,6 +9,7 @@ import { createRateLimiter } from '../middleware/rateLimit.js';
 import { optionalAuth, requireAuth } from '../middleware/auth.js';
 import Itinerary from '../models/Itinerary.js';
 import config from '../config/env.js';
+import { connectDB } from '../config/db.js';
 
 const router = Router();
 
@@ -65,6 +66,8 @@ function validatePreferences(body) {
  */
 router.post('/generate', optionalAuth, limiter, async (req, res, next) => {
   try {
+    await connectDB();
+
     // Validate input
     const errors = validatePreferences(req.body);
     if (errors.length > 0) {
@@ -145,6 +148,8 @@ router.post('/generate', optionalAuth, limiter, async (req, res, next) => {
  */
 router.get('/user/me', requireAuth, async (req, res, next) => {
   try {
+    await connectDB();
+
     const userId = req.auth.userId;
 
     const itineraries = await Itinerary.find({ userId })
@@ -172,6 +177,8 @@ router.get('/user/me', requireAuth, async (req, res, next) => {
  */
 router.get('/:id', optionalAuth, async (req, res, next) => {
   try {
+    await connectDB();
+
     const itinerary = await Itinerary.findById(req.params.id);
 
     if (!itinerary) {
@@ -209,6 +216,8 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
  */
 router.delete('/:id', requireAuth, async (req, res, next) => {
   try {
+    await connectDB();
+
     const userId = req.auth.userId;
     const itinerary = await Itinerary.findById(req.params.id);
 

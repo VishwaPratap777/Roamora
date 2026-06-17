@@ -70,9 +70,9 @@ export default function BudgetOptimizer({ itinerary }: BudgetOptimizerProps) {
       {/* Active vs original */}
       <div className="space-y-2">
         <div className="flex justify-between text-xs text-white/40 mb-1">
-          <span>Active budget</span>
+          <span>Active budget range</span>
           <span className="text-white/60 font-accent">
-            ₹{activeCost.toLocaleString('en-IN')}
+            ₹{Math.round(activeCost * 0.9).toLocaleString('en-IN')} - ₹{Math.round(activeCost * 1.1).toLocaleString('en-IN')}
           </span>
         </div>
         <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
@@ -129,7 +129,7 @@ export default function BudgetOptimizer({ itinerary }: BudgetOptimizerProps) {
             <span className="text-xs text-white/50">Per person estimate</span>
           </div>
           <span className="text-sm font-heading text-gradient-gold">
-            ₹{Math.round(activeCost / people).toLocaleString('en-IN')}
+            ₹{Math.round((activeCost / people) * 0.9).toLocaleString('en-IN')} - ₹{Math.round((activeCost / people) * 1.1).toLocaleString('en-IN')}
           </span>
         </div>
       </div>
@@ -145,7 +145,7 @@ export default function BudgetOptimizer({ itinerary }: BudgetOptimizerProps) {
                 <div className="flex justify-between text-[10px] mb-1">
                   <span className="capitalize text-white/40">{cat}</span>
                   <span className="text-white/50 font-accent">
-                    ₹{amount.toLocaleString('en-IN')} · {Math.round(pct)}%
+                    ₹{Math.round(amount * 0.9).toLocaleString('en-IN')} - ₹{Math.round(amount * 1.1).toLocaleString('en-IN')} · {Math.round(pct)}%
                   </span>
                 </div>
                 <div className="h-1 rounded-full bg-white/[0.06] overflow-hidden">
@@ -165,9 +165,9 @@ export default function BudgetOptimizer({ itinerary }: BudgetOptimizerProps) {
       {/* Daily average */}
       <div className="pt-3 border-t border-white/[0.06]">
         <div className="flex justify-between items-center text-xs">
-          <span className="text-white/30">Daily avg (active)</span>
+          <span className="text-white/30">Daily avg range (active)</span>
           <span className="text-white/50 font-accent">
-            ₹{Math.round(activeCost / itinerary.days.length).toLocaleString('en-IN')}/day
+            ₹{Math.round((activeCost / itinerary.days.length) * 0.9).toLocaleString('en-IN')} - ₹{Math.round((activeCost / itinerary.days.length) * 1.1).toLocaleString('en-IN')}/day
           </span>
         </div>
       </div>

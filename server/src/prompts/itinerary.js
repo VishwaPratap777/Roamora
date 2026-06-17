@@ -8,36 +8,36 @@
 const BUDGET_CONTEXT = {
   backpacker: {
     label: 'Backpacker',
-    dailyRange: '₹1,500–₹3,000 per day',
+    dailyRange: '₹2,500–₹4,500 per day',
     style: 'Budget hostels/dormitories, street food and local dhabas, public transport (buses/shared autos), free or low-cost attractions. Prioritize authentic local experiences over comfort.',
     costAnchors: `Per-category cost guide (use these as reference for estimatedCost):
-      - Accommodation (rest): ₹400–₹800 per night
-      - Meals (food): ₹80–₹200 per meal
-      - Local transport (transport): ₹50–₹300 per ride
-      - Activities/entry fees (sightseeing/cultural/trek): ₹0–₹500 per activity
-      - Long-distance transport: ₹300–₹800`,
+      - Accommodation (rest): ₹600–₹1,200 per night
+      - Meals (food): ₹150–₹350 per meal
+      - Local transport (transport): ₹100–₹500 per ride
+      - Activities/entry fees (sightseeing/cultural/trek): ₹100–₹800 per activity
+      - Long-distance transport: ₹500–₹1,500`,
   },
   balanced: {
     label: 'Balanced',
-    dailyRange: '₹4,000–₹8,000 per day',
+    dailyRange: '₹5,000–₹10,000 per day',
     style: 'Mid-range hotels/homestays (private rooms), mix of street food and sit-down restaurants, private transport for longer routes, paid activities. Balance comfort with local immersion.',
     costAnchors: `Per-category cost guide (use these as reference for estimatedCost):
-      - Accommodation (rest): ₹1,500–₹3,000 per night
-      - Meals (food): ₹200–₹600 per meal
-      - Local transport (transport): ₹200–₹800 per ride
-      - Activities/entry fees (sightseeing/cultural/trek): ₹200–₹2,000 per activity
-      - Long-distance transport: ₹800–₹2,500`,
+      - Accommodation (rest): ₹2,500–₹5,000 per night
+      - Meals (food): ₹300–₹900 per meal
+      - Local transport (transport): ₹400–₹1,500 per ride
+      - Activities/entry fees (sightseeing/cultural/trek): ₹300–₹3,000 per activity
+      - Long-distance transport: ₹1,200–₹4,500`,
   },
   luxury: {
     label: 'Luxury',
-    dailyRange: '₹12,000–₹25,000 per day',
+    dailyRange: '₹18,000–₹40,000 per day',
     style: 'Premium resorts/boutique hotels (4-5 star), fine dining and curated culinary experiences, private chauffeur-driven vehicles, exclusive access and VIP experiences. Focus on comfort, privacy, and unique luxury.',
     costAnchors: `Per-category cost guide (use these as reference for estimatedCost):
-      - Accommodation (rest): ₹5,000–₹12,000 per night
-      - Meals (food): ₹500–₹2,500 per meal
-      - Local transport (transport): ₹800–₹3,000 per ride
-      - Activities/entry fees (sightseeing/cultural/trek): ₹1,000–₹5,000 per activity
-      - Long-distance transport: ₹2,500–₹8,000`,
+      - Accommodation (rest): ₹8,000–₹20,000 per night
+      - Meals (food): ₹1,000–₹4,000 per meal
+      - Local transport (transport): ₹2,000–₹6,000 per ride
+      - Activities/entry fees (sightseeing/cultural/trek): ₹2,000–₹10,000 per activity
+      - Long-distance transport: ₹5,000–₹15,000`,
   },
 };
 
@@ -198,17 +198,17 @@ export function buildUserPrompt(preferences) {
   };
 
   const transportDescriptions = {
-    flight: 'Traveling by flight — include airport drop-off/pick-up logistics, typical flight duration, and arrival transfer in Day 1.',
-    train: 'Traveling by train — include station departure, estimated journey time, and scenic route notes for Day 1.',
-    bus: 'Traveling by bus/coach — include bus terminal logistics, expected travel time, and comfort tips for Day 1.',
-    'self-drive': 'Road trip by personal vehicle — include drive distance, key fuel stops, scenic highway notes, and estimated drive time as a transport activity on Day 1.',
-    any: 'Transport mode is flexible — suggest the best option based on distance and budget.',
+    flight: 'Traveling by flight — you MUST include a "Flight from [Starting Location]" on Day 1, and a "Flight to [Starting Location]" on the Last Day. Estimate the flight ticket price based on a 1-month advance booking window (typically ₹5,000 to ₹10,000 for domestic standard, or higher for international). Activity titles must include a variable cost notation (e.g. prefix "✈️ Flight... (~₹[cost])").',
+    train: 'Traveling by train — you MUST include a "Train from [Starting Location]" on Day 1, and a "Train to [Starting Location]" on the Last Day. Estimate the train ticket price based on a 1-month advance window (typically ₹800 to ₹2,500). Activity titles must include a variable cost notation (e.g. prefix "🚊 Train... (~₹[cost])").',
+    bus: 'Traveling by bus/coach — you MUST include a "Bus from [Starting Location]" on Day 1, and a "Bus to [Starting Location]" on the Last Day. Estimate the bus ticket price based on a 1-month advance window (typically ₹500 to ₹1,500). Activity titles must include a variable cost notation (e.g. prefix "🚌 Bus... (~₹[cost])").',
+    'self-drive': 'Road trip by personal vehicle — you MUST include a "Drive from [Starting Location]" on Day 1, and a "Drive to [Starting Location]" on the Last Day. Estimate fuel/toll costs based on distance and vehicle type. Activity titles must include a variable cost notation (e.g. prefix "🚗 Drive... (~₹[cost])").',
+    any: 'Transport mode is flexible — select the best option (flight, train, bus, or drive) based on distance and budget, and you MUST include this transport on both Day 1 and the Last Day. Estimate travel costs assuming a 1-month booking window. Activity titles must include a variable cost notation (e.g. prefix "... (~₹[cost])").',
   };
 
   const vehicleNotes = {
-    bike: 'Vehicle: motorcycle/scooter — ideal for mountain roads, narrow lanes. Include fuel cost at ~₹5/km, note pillion restrictions.',
-    car: 'Vehicle: car/sedan — standard fuel at ~₹8/km. Note road conditions and parking situations.',
-    suv: 'Vehicle: SUV/4WD — high clearance for rough mountain roads. Fuel at ~₹12/km. Perfect for off-road spots.',
+    bike: 'Vehicle: motorcycle/scooter — ideal for mountain roads. Fuel/tolls at ~₹5/km.',
+    car: 'Vehicle: car/sedan — standard fuel/tolls at ~₹8/km.',
+    suv: 'Vehicle: SUV/4WD — high clearance. Fuel/tolls at ~₹12/km.',
   };
 
   // Build transport block
@@ -216,8 +216,9 @@ export function buildUserPrompt(preferences) {
   if (preferences.startingFrom) {
     transportBlock += `\n**Starting Location**: ${preferences.startingFrom}`;
   }
-  if (preferences.transportMode && preferences.transportMode !== 'any') {
-    transportBlock += `\n**Mode of Transport**: ${preferences.transportMode}`;
+  if (preferences.transportMode) {
+    const mode = preferences.transportMode === 'any' ? 'flexible' : preferences.transportMode;
+    transportBlock += `\n**Mode of Transport**: ${mode}`;
     const desc = transportDescriptions[preferences.transportMode];
     if (desc) transportBlock += `\n${desc}`;
   }
@@ -226,7 +227,7 @@ export function buildUserPrompt(preferences) {
     if (vNote) transportBlock += `\n${vNote}`;
   }
   if (transportBlock) {
-    transportBlock = `\n**Reachability & Getting There**:${transportBlock}\n`;
+    transportBlock = `\n**Reachability & In/Out Transport**:${transportBlock}\n`;
   }
 
   return `Generate a ${preferences.duration}-day travel itinerary for:
@@ -255,5 +256,5 @@ Remember:
 - Each day should have a compelling, poetic title
 - Activities should flow naturally through the day in geographic order
 - CRITICAL: After generating all activities, calculate each day's totalCost as the exact sum of its activities' estimatedCost values, then calculate totalBudget as the exact sum of all days' totalCost values
-- If a starting location is provided, make Day 1's first activity a realistic "Getting There" transport activity with estimated travel time and cost`;
+- You MUST include a "Getting There" transport activity (category: "transport") as the first activity on Day 1 (incoming travel) and a "Return Journey" transport activity (category: "transport") as the last activity on the final Day (outgoing travel). Estimate realistic ticket or fuel/toll costs assuming a 1-month booking/planning window, outputting this under estimatedCost (positive number), and prepend a variable symbol/text (like "✈️ Flight from [Starting Location] to [Destination] (~₹[cost])") in the activity title.`;
 }

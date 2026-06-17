@@ -41,7 +41,7 @@ export default function DayView({ day, itineraryId }: DayViewProps) {
           <div className="flex-1 h-[1px] bg-white/[0.06]" />
           {day.totalCost !== undefined && (
             <span className="text-xs text-white/30 font-accent">
-              ₹{day.totalCost.toLocaleString('en-IN')}
+              ₹{Math.round(day.totalCost * 0.9).toLocaleString('en-IN')} - ₹{Math.round(day.totalCost * 1.1).toLocaleString('en-IN')}
             </span>
           )}
         </motion.div>
@@ -101,9 +101,9 @@ export default function DayView({ day, itineraryId }: DayViewProps) {
 
           {day.totalCost !== undefined && (
             <div className="flex items-center justify-between px-5 py-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-xs text-white/40 font-accent">Day {day.dayNumber} Total</span>
+              <span className="text-xs text-white/40 font-accent">Day {day.dayNumber} Total Range</span>
               <span className="text-sm font-heading text-gradient-gold">
-                ₹{day.totalCost.toLocaleString('en-IN')}
+                ₹{Math.round(day.totalCost * 0.9).toLocaleString('en-IN')} - ₹{Math.round(day.totalCost * 1.1).toLocaleString('en-IN')}
               </span>
             </div>
           )}

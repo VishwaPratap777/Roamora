@@ -15,19 +15,19 @@ const BUDGET_OPTIONS: { value: BudgetType; icon: React.ReactNode; title: string;
     value: 'backpacker',
     icon: <Backpack className="w-6 h-6" />,
     title: 'Backpacker',
-    description: '₹1,500–₹3,000/day • Hostels, street food, public transport',
+    description: '₹2,500–₹4,500/day • Hostels, street food, public transport',
   },
   {
     value: 'balanced',
     icon: <Scale className="w-6 h-6" />,
     title: 'Balanced',
-    description: '₹4,000–₹8,000/day • Homestays, mixed dining, comfort',
+    description: '₹5,000–₹10,000/day • Homestays, mixed dining, comfort',
   },
   {
     value: 'luxury',
     icon: <Crown className="w-6 h-6" />,
     title: 'Luxury',
-    description: '₹12,000–₹25,000/day • Premium resorts, fine dining, exclusivity',
+    description: '₹18,000–₹40,000/day • Premium resorts, fine dining, exclusivity',
   },
 ];
 

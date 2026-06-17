@@ -131,9 +131,9 @@ export default function ItineraryHeader({ itinerary }: ItineraryHeaderProps) {
           transition={{ duration: 0.5, delay: 0.6 }}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-primary-400/10 to-primary-500/5 border border-primary-400/15"
         >
-          <span className="text-sm text-white/50">Estimated Total:</span>
+          <span className="text-sm text-white/50">Estimated Total Range:</span>
           <span className="text-lg font-heading text-gradient-gold">
-            ₹{totalBudget.toLocaleString('en-IN')}
+            ₹{Math.round(totalBudget * 0.9).toLocaleString('en-IN')} - ₹{Math.round(totalBudget * 1.1).toLocaleString('en-IN')}
           </span>
         </motion.div>
       </div>

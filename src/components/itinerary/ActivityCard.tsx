@@ -127,7 +127,7 @@ export default function ActivityCard({
                   'text-[10px] ml-auto font-accent transition-colors',
                   isSkipped ? 'text-white/20 line-through' : 'text-white/30'
                 )}>
-                  ₹{activity.estimatedCost.toLocaleString('en-IN')}
+                  {activity.category === 'transport' ? '~' : ''}₹{Math.round(activity.estimatedCost * 0.9).toLocaleString('en-IN')} - ₹{Math.round(activity.estimatedCost * 1.1).toLocaleString('en-IN')}
                 </span>
               )}
 

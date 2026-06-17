@@ -184,9 +184,9 @@ export default function HiddenGemPanel({ itinerary }: HiddenGemPanelProps) {
 
                             {activity.estimatedCost !== undefined && (
                               <div className="flex items-center justify-between pt-1 border-t border-primary-400/10">
-                                <span className="text-[10px] text-white/30">Estimated Cost</span>
+                                <span className="text-[10px] text-white/30">Estimated Cost Range</span>
                                 <span className="text-xs font-accent text-primary-300">
-                                  ₹{activity.estimatedCost.toLocaleString('en-IN')}
+                                  ₹{Math.round(activity.estimatedCost * 0.9).toLocaleString('en-IN')} - ₹{Math.round(activity.estimatedCost * 1.1).toLocaleString('en-IN')}
                                 </span>
                               </div>
                             )}

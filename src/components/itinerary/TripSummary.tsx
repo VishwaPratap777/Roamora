@@ -103,9 +103,9 @@ export default function TripSummary({ itinerary }: TripSummaryProps) {
 
           {/* Total */}
           <div className="mb-5 pb-4 border-b border-white/[0.06]">
-            <div className="text-xs text-white/30 mb-1">Total Estimated</div>
+            <div className="text-xs text-white/30 mb-1">Total Estimated Range</div>
             <div className="text-2xl font-heading text-gradient-gold">
-              ₹{totalBudget.toLocaleString('en-IN')}
+              ₹{Math.round(totalBudget * 0.9).toLocaleString('en-IN')} - ₹{Math.round(totalBudget * 1.1).toLocaleString('en-IN')}
             </div>
           </div>
 
@@ -118,7 +118,9 @@ export default function TripSummary({ itinerary }: TripSummaryProps) {
                 <div key={day.dayNumber}>
                   <div className="flex items-center justify-between text-xs mb-1">
                     <span className="text-white/40">Day {day.dayNumber}</span>
-                    <span className="text-white/50 font-accent">₹{cost.toLocaleString('en-IN')}</span>
+                    <span className="text-white/50 font-accent">
+                      ₹{Math.round(cost * 0.9).toLocaleString('en-IN')} - ₹{Math.round(cost * 1.1).toLocaleString('en-IN')}
+                    </span>
                   </div>
                   <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                     <motion.div

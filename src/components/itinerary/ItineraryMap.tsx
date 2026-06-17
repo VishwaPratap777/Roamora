@@ -294,7 +294,7 @@ function createPopupHTML(activity: ItineraryActivity): string {
           text-transform: capitalize;
         ">${activity.category}</span>
         ${activity.isHiddenGem ? '<span style="color: #f5d98a;">✨ Hidden Gem</span>' : ''}
-        ${activity.estimatedCost ? `<span style="color: #94a3b8; margin-left: auto;">₹${activity.estimatedCost.toLocaleString()}</span>` : ''}
+        ${activity.estimatedCost ? `<span style="color: #94a3b8; margin-left: auto;">₹${Math.round(activity.estimatedCost * 0.9).toLocaleString()} - ₹${Math.round(activity.estimatedCost * 1.1).toLocaleString()}</span>` : ''}
       </div>
       ${activity.photographyTip ? `
         <div style="font-size: 10px; color: #a855f7; margin-top: 8px; padding-top: 6px; border-top: 1px solid #1e293b;">

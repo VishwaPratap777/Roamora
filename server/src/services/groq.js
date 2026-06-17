@@ -74,7 +74,8 @@ IMPORTANT: Your response MUST be a valid JSON object with this exact structure:
     ],
     response_format: { type: 'json_object' },
     temperature: 0.4,
-    max_tokens: Math.min(30000, 4000 + (preferences.duration || 3) * 1500),
+    // Capped at 6,500 to keep prompt + max_tokens under the 12,000 TPM limit for Groq's on-demand tier
+    max_tokens: Math.min(6500, 2000 + (preferences.duration || 3) * 700),
   });
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

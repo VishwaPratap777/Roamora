@@ -8,18 +8,36 @@
 const BUDGET_CONTEXT = {
   backpacker: {
     label: 'Backpacker',
-    dailyRange: '₹500–₹1,500 per day',
-    style: 'Budget hostels, street food, public transport, free attractions. Prioritize authentic local experiences over comfort.',
+    dailyRange: '₹1,500–₹3,000 per day',
+    style: 'Budget hostels/dormitories, street food and local dhabas, public transport (buses/shared autos), free or low-cost attractions. Prioritize authentic local experiences over comfort.',
+    costAnchors: `Per-category cost guide (use these as reference for estimatedCost):
+      - Accommodation (rest): ₹400–₹800 per night
+      - Meals (food): ₹80–₹200 per meal
+      - Local transport (transport): ₹50–₹300 per ride
+      - Activities/entry fees (sightseeing/cultural/trek): ₹0–₹500 per activity
+      - Long-distance transport: ₹300–₹800`,
   },
   balanced: {
     label: 'Balanced',
-    dailyRange: '₹2,000–₹5,000 per day',
-    style: 'Mid-range hotels/homestays, mix of street food and restaurants, private transport for longer routes. Balance comfort with local immersion.',
+    dailyRange: '₹4,000–₹8,000 per day',
+    style: 'Mid-range hotels/homestays (private rooms), mix of street food and sit-down restaurants, private transport for longer routes, paid activities. Balance comfort with local immersion.',
+    costAnchors: `Per-category cost guide (use these as reference for estimatedCost):
+      - Accommodation (rest): ₹1,500–₹3,000 per night
+      - Meals (food): ₹200–₹600 per meal
+      - Local transport (transport): ₹200–₹800 per ride
+      - Activities/entry fees (sightseeing/cultural/trek): ₹200–₹2,000 per activity
+      - Long-distance transport: ₹800–₹2,500`,
   },
   luxury: {
     label: 'Luxury',
-    dailyRange: '₹8,000+ per day',
-    style: 'Premium resorts/boutique hotels, fine dining and curated food experiences, private vehicles, exclusive access. Focus on comfort and unique luxury experiences.',
+    dailyRange: '₹12,000–₹25,000 per day',
+    style: 'Premium resorts/boutique hotels (4-5 star), fine dining and curated culinary experiences, private chauffeur-driven vehicles, exclusive access and VIP experiences. Focus on comfort, privacy, and unique luxury.',
+    costAnchors: `Per-category cost guide (use these as reference for estimatedCost):
+      - Accommodation (rest): ₹5,000–₹12,000 per night
+      - Meals (food): ₹500–₹2,500 per meal
+      - Local transport (transport): ₹800–₹3,000 per ride
+      - Activities/entry fees (sightseeing/cultural/trek): ₹1,000–₹5,000 per activity
+      - Long-distance transport: ₹2,500–₹8,000`,
   },
 };
 
@@ -129,19 +147,30 @@ Your expertise covers:
 - Adventure activities with accurate difficulty ratings
 - Cultural and spiritual experiences
 
-RULES:
+ITINERARY PLANNING RULES:
 1. Always prioritize hidden gems and off-the-beaten-path experiences over mainstream tourist spots.
 2. Include realistic time estimates — account for travel between locations, rest periods, meal times.
-3. Cost estimates must be realistic and in INR (₹). Research actual prices.
-4. Every activity must have valid latitude/longitude coordinates.
-5. Generate unique IDs for each activity (use format: "d{dayNumber}-a{activityNumber}").
-6. Plan 4-7 activities per day depending on the energy level.
-7. Include at least 2-3 food/meal activities per day.
-8. Start mornings early for photography vibes (golden hour).
-9. Include transport activities when moving between locations.
-10. Mark truly unique, off-the-beaten-path locations as hidden gems.
-11. If photography vibe is selected, include photography tips and golden hour info.
-12. Always include a mix of activity types per day — don't make entire days single-category.
+3. Every activity must have valid latitude/longitude coordinates that correspond to the ACTUAL named location. Never invent fictional places.
+4. Generate unique IDs for each activity (use format: "d{dayNumber}-a{activityNumber}").
+5. Plan 4-7 activities per day depending on the energy level.
+6. Include at least 2-3 food/meal activities per day.
+7. Start mornings early for photography vibes (golden hour).
+8. Include transport activities when moving between distant locations (distances > 5km).
+9. Mark truly unique, off-the-beaten-path locations as hidden gems.
+10. If photography vibe is selected, include photography tips and golden hour info.
+11. Always include a mix of activity types per day — don't make entire days single-category.
+12. Activities within a day must be geographically logical — plan them in a sensible route order to minimize backtracking.
+13. Use specific, real, verifiable place names for every location — never use generic or made-up names.
+14. Account for realistic travel time between activities. If two consecutive activities are far apart, insert a transport activity between them.
+
+BUDGET & COST RULES (CRITICAL — follow these exactly):
+15. Cost estimates must be realistic and in INR (₹). Use the per-category cost guide provided in the budget tier description.
+16. Set each activity's "estimatedCost" based on its category and the budget tier's cost anchors.
+17. Each day's "totalCost" MUST exactly equal the arithmetic sum of all "estimatedCost" values in that day's activities. Calculate this explicitly.
+18. The overall "totalBudget" MUST exactly equal the arithmetic sum of all days' "totalCost" values. Calculate this explicitly.
+19. Before outputting JSON, double-check ALL arithmetic: verify every day's totalCost matches its activities sum, and totalBudget matches the days sum.
+20. Never assign ₹0 to a paid activity (food, accommodation, transport, entry fees). Only free viewpoints, public parks, or walking activities can be ₹0.
+21. Accommodation costs should appear as an activity (category: "rest") once per day — typically the last activity of the day or first of next day.
 
 You must respond with valid JSON matching the provided schema. No additional text.`;
 }
@@ -207,6 +236,8 @@ export function buildUserPrompt(preferences) {
 **Budget Tier**: ${budget.label} (${budget.dailyRange})
 ${budget.style}
 
+${budget.costAnchors}
+
 **Trip Type**: ${tripTypeDescriptions[preferences.tripType] || preferences.tripType}
 
 **Travel Vibes**:
@@ -218,10 +249,11 @@ ${preferences.startDate ? `**Start Date**: ${preferences.startDate}` : ''}
 ${transportBlock}
 Remember:
 - Focus heavily on HIDDEN GEMS and underrated spots
-- Include realistic cost estimates in INR
-- Provide accurate GPS coordinates for every location
-- Optimize the route to minimize travel time between locations
+- Use the per-category cost guide above to set realistic estimatedCost for each activity based on its category
+- Provide accurate GPS coordinates for every location — coordinates must point to the actual named place
+- Optimize the route to minimize travel time between locations within each day
 - Each day should have a compelling, poetic title
-- Activities should flow naturally through the day
+- Activities should flow naturally through the day in geographic order
+- CRITICAL: After generating all activities, calculate each day's totalCost as the exact sum of its activities' estimatedCost values, then calculate totalBudget as the exact sum of all days' totalCost values
 - If a starting location is provided, make Day 1's first activity a realistic "Getting There" transport activity with estimated travel time and cost`;
 }

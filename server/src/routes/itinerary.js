@@ -86,6 +86,9 @@ router.post('/generate', optionalAuth, limiter, async (req, res, next) => {
       energy: req.body.energy,
       duration: parseInt(req.body.duration, 10),
       startDate: req.body.startDate || undefined,
+      startingFrom: req.body.startingFrom || undefined,
+      transportMode: req.body.transportMode || undefined,
+      vehicleType: req.body.vehicleType || undefined,
     };
 
     let aiResult;
@@ -114,6 +117,21 @@ router.post('/generate', optionalAuth, limiter, async (req, res, next) => {
         error: 'No AI provider configured. Set OPENAI_API_KEY or GROQ_API_KEY.',
         status: 503,
       });
+    }
+
+    // Recalculate budgets to ensure arithmetic consistency
+    // AI models often return inconsistent totals — this guarantees correctness
+    if (aiResult.days && Array.isArray(aiResult.days)) {
+      for (const day of aiResult.days) {
+        if (day.activities && Array.isArray(day.activities)) {
+          day.totalCost = day.activities.reduce(
+            (sum, a) => sum + (Number(a.estimatedCost) || 0), 0
+          );
+        }
+      }
+      aiResult.totalBudget = aiResult.days.reduce(
+        (sum, d) => sum + (Number(d.totalCost) || 0), 0
+      );
     }
 
     // Extract userId from Clerk auth (null if unauthenticated)

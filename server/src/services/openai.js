@@ -44,8 +44,8 @@ export async function generateWithOpenAI(preferences) {
         type: 'json_schema',
         json_schema: ITINERARY_JSON_SCHEMA,
       },
-      temperature: 0.8,
-      max_tokens: 8000,
+      temperature: 0.4,
+      max_tokens: Math.min(30000, 4000 + (preferences.duration || 3) * 1500),
     });
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

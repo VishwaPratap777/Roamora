@@ -73,8 +73,8 @@ IMPORTANT: Your response MUST be a valid JSON object with this exact structure:
       { role: 'user', content: buildUserPrompt(preferences) },
     ],
     response_format: { type: 'json_object' },
-    temperature: 0.8,
-    max_tokens: 8000,
+    temperature: 0.4,
+    max_tokens: Math.min(30000, 4000 + (preferences.duration || 3) * 1500),
   });
 
   const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

@@ -70,6 +70,15 @@ const PreferencesSchema = new mongoose.Schema(
     },
     duration: { type: Number, required: true, min: 1, max: 14 },
     startDate: { type: String },
+    startingFrom: { type: String },
+    transportMode: {
+      type: String,
+      enum: ['flight', 'train', 'bus', 'self-drive', 'any'],
+    },
+    vehicleType: {
+      type: String,
+      enum: ['bike', 'car', 'suv'],
+    },
   },
   { _id: false }
 );
